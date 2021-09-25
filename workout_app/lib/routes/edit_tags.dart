@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:workout_app/Data/data.dart';
+import 'package:workout_app/Data/db_helper.dart';
 
 class EditTags extends StatefulWidget {
   const EditTags({Key? key}) : super(key: key);
@@ -10,17 +12,6 @@ class EditTags extends StatefulWidget {
 }
 
 class _EditTagsState extends State<EditTags> {
-  List<Color> availableColors = const [
-    Color(0xFF9BA1FF),
-    Color(0xFFFFF3AB),
-    Color(0xFFFF9FCE),
-    Color(0xFFA9F5FF),
-    Color(0xFFBD8261),
-    Color(0xFFA7BC54),
-    Color(0xFFC52DB5),
-    Color(0xFFCFA9FF),
-    Color(0xFFD37F31),
-  ];
   final int colorsInRow = 5;
 
   // id=-1 means new tag
@@ -60,7 +51,7 @@ class _EditTagsState extends State<EditTags> {
                   pickerColor: currentColor,
                   onColorChanged: (Color color) =>
                       setState(() => currentColor = color),
-                  availableColors: availableColors,
+                  availableColors: AppData.availableColors,
                   layoutBuilder: (BuildContext context, List<Color> colors,
                       PickerItem child) {
                     return SizedBox(
@@ -91,7 +82,12 @@ class _EditTagsState extends State<EditTags> {
                     if (id != -1) {
                     }
                     // create new
-                    else {}
+                    else {
+                      DatabaseHelper.inst.createTag(
+                        name,
+                        AppData.colorToIndex(currentColor),
+                      );
+                    }
                     Navigator.of(context).pop();
                   },
                 )
@@ -114,6 +110,8 @@ class _EditTagsState extends State<EditTags> {
             tooltip: 'New tag',
             onPressed: () {
               showEditTagDialog(context, id: -1);
+              DatabaseHelper.inst.getAllTags();
+              // DatabaseHelper.inst.deleteDb();
             },
           ),
         ],
