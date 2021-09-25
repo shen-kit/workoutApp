@@ -10,7 +10,6 @@ class EditTags extends StatefulWidget {
 }
 
 class _EditTagsState extends State<EditTags> {
-  Color currentColor = Colors.lightBlue;
   List<Color> availableColors = const [
     Color(0xFF9BA1FF),
     Color(0xFFFFF3AB),
@@ -24,9 +23,14 @@ class _EditTagsState extends State<EditTags> {
   ];
   final int colorsInRow = 5;
 
-  void onColorChanged(Color color) => setState(() => currentColor = color);
-
-  Future<void> showEditTagDialog(context) async {
+  // id=-1 means new tag
+  Future<void> showEditTagDialog(context,
+      {int id = -1,
+      String? oldName,
+      Color currentColor = const Color(0xFF9BA1FF)}) async {
+    final nameController = (id == -1)
+        ? TextEditingController()
+        : TextEditingController(text: oldName);
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -44,8 +48,9 @@ class _EditTagsState extends State<EditTags> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const TextField(
-                  decoration: InputDecoration(
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     hintText: 'Name',
                   ),
@@ -53,7 +58,8 @@ class _EditTagsState extends State<EditTags> {
                 const SizedBox(height: 20),
                 BlockPicker(
                   pickerColor: currentColor,
-                  onColorChanged: onColorChanged,
+                  onColorChanged: (Color color) =>
+                      setState(() => currentColor = color),
                   availableColors: availableColors,
                   layoutBuilder: (BuildContext context, List<Color> colors,
                       PickerItem child) {
@@ -78,6 +84,14 @@ class _EditTagsState extends State<EditTags> {
                     ),
                   ),
                   onPressed: () {
+                    final name = nameController.text;
+                    // ignore: avoid_print
+                    print(name);
+                    // edit existing
+                    if (id != -1) {
+                    }
+                    // create new
+                    else {}
                     Navigator.of(context).pop();
                   },
                 )
@@ -94,6 +108,15 @@ class _EditTagsState extends State<EditTags> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Tags'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: 'New tag',
+            onPressed: () {
+              showEditTagDialog(context, id: -1);
+            },
+          ),
+        ],
       ),
       body: ListView(
         children: <Widget>[
@@ -157,7 +180,12 @@ class TagTile extends StatelessWidget {
           children: <Widget>[
             TextButton(
               onPressed: () {
-                showEditTagDialog(context);
+                showEditTagDialog(
+                  context,
+                  id: id,
+                  oldName: name,
+                  currentColor: color,
+                );
               },
               child: Text(
                 name,
