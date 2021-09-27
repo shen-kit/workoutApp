@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:workout_app/Data/data.dart';
@@ -40,7 +42,7 @@ class DatabaseHelper {
     );
   }
 
-  // #region Create
+  //#region Tags
 
   Future<void> createTag(String name, int color) async {
     final db = await database;
@@ -53,11 +55,33 @@ class DatabaseHelper {
     );
   }
 
-  // #endregion
-
-  //#region Read
-
   Future<List<Tag>> getAllTags() async {
+    Future<List<int>> getTagIds() async {
+      final db = await database;
+      List<Map<String, dynamic>> results = await db.query(
+        'tags',
+        columns: ['id'],
+        orderBy: 'id ASC',
+      );
+      List<int> ids = [];
+      for (Map<String, dynamic> result in results) {
+        ids.add(result['id']);
+      }
+      return ids;
+    }
+
+    Future<Tag> getTagFromId(int id) async {
+      final db = await database;
+      List<Map<String, dynamic>> result = await db.query(
+        'tags',
+        columns: ['name', 'color'],
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      Tag tag = Tag(id: id, name: result[0]['name'], color: result[0]['color']);
+      return tag;
+    }
+
     List<int> ids = await getTagIds();
     List<Tag> tags = [];
     for (int id in ids) {
@@ -66,41 +90,33 @@ class DatabaseHelper {
     return tags;
   }
 
-  Future<List<int>> getTagIds() async {
+  Future<void> updateTag(Tag tag) async {
     final db = await database;
-    List<Map<String, dynamic>> results = await db.query(
+    Map<String, dynamic> row = {
+      'name': tag.name,
+      'color': tag.color,
+    };
+    await db.update(
       'tags',
-      columns: ['id'],
-      orderBy: 'id DESC',
+      row,
+      where: 'id = ?',
+      whereArgs: [tag.id],
     );
-    List<int> ids = [];
-    for (Map<String, dynamic> result in results) {
-      ids.add(result['id']);
-    }
-    return ids;
   }
 
-  Future<Tag> getTagFromId(int id) async {
+  Future<void> deleteTag(int id) async {
     final db = await database;
-    List<Map<String, dynamic>> result = await db.query(
+    db.delete(
       'tags',
-      columns: ['name', 'color'],
       where: 'id = ?',
       whereArgs: [id],
     );
-    Tag tag = Tag(id: id, name: result[0]['name'], color: result[0]['color']);
-    return tag;
   }
 
-  //#endregion Queries
-
-  // #region Delete
+  //#endregion Tags
 
   Future<void> deleteDb() async {
     await deleteDatabase(join(await getDatabasesPath(), _dbName));
-    // ignore: avoid_print
     print('deleted database');
   }
-
-  // #endregion
 }

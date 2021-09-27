@@ -16,9 +16,9 @@ class AppData {
 }
 
 class Tag {
-  int? id;
+  int id;
   String name;
   int color;
 
-  Tag({this.id, required this.name, required this.color});
+  Tag({this.id = -1, required this.name, required this.color});
 }

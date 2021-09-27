@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -13,6 +15,10 @@ class EditTags extends StatefulWidget {
 
 class _EditTagsState extends State<EditTags> {
   final int colorsInRow = 5;
+
+  reloadPage() {
+    setState(() {});
+  }
 
   // id=-1 means new tag
   Future<void> showEditTagDialog(context,
@@ -76,19 +82,26 @@ class _EditTagsState extends State<EditTags> {
                   ),
                   onPressed: () {
                     final name = nameController.text;
-                    // ignore: avoid_print
-                    print(name);
                     // edit existing
                     if (id != -1) {
+                      DatabaseHelper.inst.updateTag(
+                        Tag(
+                          id: id,
+                          name: name,
+                          color: AppData.colorToIndex(currentColor),
+                        ),
+                      );
                     }
-                    // create new
+                    // create new tag
                     else {
                       DatabaseHelper.inst.createTag(
                         name,
                         AppData.colorToIndex(currentColor),
                       );
                     }
-                    Navigator.of(context).pop();
+                    // instead of pop so the FutureBuilder reloads
+                    Navigator.pop(context);
+                    reloadPage();
                   },
                 )
               ],
@@ -110,33 +123,49 @@ class _EditTagsState extends State<EditTags> {
             tooltip: 'New tag',
             onPressed: () {
               showEditTagDialog(context, id: -1);
-              DatabaseHelper.inst.getAllTags();
-              // DatabaseHelper.inst.deleteDb();
             },
           ),
         ],
       ),
-      body: ListView(
-        children: <Widget>[
-          TagTile(
-            id: 0,
-            name: 'Push',
-            color: const Color(0xFF9BA1FF),
-            showEditTagDialog: showEditTagDialog,
-          ),
-          TagTile(
-            id: 1,
-            name: 'Pull',
-            color: const Color(0xFFFFF3AB),
-            showEditTagDialog: showEditTagDialog,
-          ),
-          TagTile(
-            id: 2,
-            name: 'Horizontal',
-            color: const Color(0xFFFF9FCE),
-            showEditTagDialog: showEditTagDialog,
-          ),
-        ],
+      body: FutureBuilder(
+        future: DatabaseHelper.inst.getAllTags(),
+        builder: (BuildContext context, AsyncSnapshot<List<Tag>> snapshot) {
+          if (snapshot.hasError) {
+            print('Error getting tags: $snapshot.error');
+            return const Text('Error getting routines');
+          }
+          if (!snapshot.hasData) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: const [
+                  SizedBox(
+                    child: CircularProgressIndicator(),
+                    width: 60,
+                    height: 60,
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(top: 16),
+                    child: Text('Getting tags...'),
+                  )
+                ],
+              ),
+            );
+          }
+          return ListView.builder(
+            itemCount: snapshot.data!.length,
+            itemBuilder: (context, i) {
+              return TagTile(
+                id: snapshot.data![i].id,
+                name: snapshot.data![i].name,
+                color: AppData.availableColors[snapshot.data![i].color],
+                showEditTagDialog: showEditTagDialog,
+                reloadPage: reloadPage,
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -148,6 +177,7 @@ class TagTile extends StatelessWidget {
     required this.name,
     required this.color,
     required this.showEditTagDialog,
+    required this.reloadPage,
     Key? key,
   }) : super(key: key);
 
@@ -155,17 +185,23 @@ class TagTile extends StatelessWidget {
   final String name;
   final Color color;
   final Function showEditTagDialog;
+  final Function reloadPage;
 
   @override
   Widget build(BuildContext context) {
     return Slidable(
+      key: Key(id.toString()),
       actionPane: const SlidableScrollActionPane(),
       actions: <Widget>[
         IconSlideAction(
           caption: 'Delete',
           color: Colors.red,
           icon: Icons.delete,
-          onTap: () {},
+          onTap: () {
+            DatabaseHelper.inst.deleteTag(id);
+            // reload page
+            reloadPage();
+          },
         )
       ],
       actionExtentRatio: 1 / 5,
