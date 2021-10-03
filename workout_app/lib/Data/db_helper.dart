@@ -55,7 +55,7 @@ class DatabaseHelper {
     );
   }
 
-  Future<List<Tag>> getAllTags() async {
+  Future<List<TagInfo>> getAllTags() async {
     Future<List<int>> getTagIds() async {
       final db = await database;
       List<Map<String, dynamic>> results = await db.query(
@@ -70,7 +70,7 @@ class DatabaseHelper {
       return ids;
     }
 
-    Future<Tag> getTagFromId(int id) async {
+    Future<TagInfo> getTagFromId(int id) async {
       final db = await database;
       List<Map<String, dynamic>> result = await db.query(
         'tags',
@@ -78,19 +78,20 @@ class DatabaseHelper {
         where: 'id = ?',
         whereArgs: [id],
       );
-      Tag tag = Tag(id: id, name: result[0]['name'], color: result[0]['color']);
+      TagInfo tag =
+          TagInfo(id: id, name: result[0]['name'], color: result[0]['color']);
       return tag;
     }
 
     List<int> ids = await getTagIds();
-    List<Tag> tags = [];
+    List<TagInfo> tags = [];
     for (int id in ids) {
       tags.add(await getTagFromId(id));
     }
     return tags;
   }
 
-  Future<void> updateTag(Tag tag) async {
+  Future<void> updateTag(TagInfo tag) async {
     final db = await database;
     Map<String, dynamic> row = {
       'name': tag.name,

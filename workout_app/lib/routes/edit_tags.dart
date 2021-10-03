@@ -21,10 +21,12 @@ class _EditTagsState extends State<EditTags> {
   }
 
   // id=-1 means new tag
-  Future<void> showEditTagDialog(context,
-      {int id = -1,
-      String? oldName,
-      Color currentColor = const Color(0xFF9BA1FF)}) async {
+  Future<void> showEditTagDialog(
+    context, {
+    int id = -1,
+    String? oldName,
+    Color currentColor = const Color(0xFF9BA1FF),
+  }) async {
     final nameController = (id == -1)
         ? TextEditingController()
         : TextEditingController(text: oldName);
@@ -85,7 +87,7 @@ class _EditTagsState extends State<EditTags> {
                     // edit existing
                     if (id != -1) {
                       DatabaseHelper.inst.updateTag(
-                        Tag(
+                        TagInfo(
                           id: id,
                           name: name,
                           color: AppData.colorToIndex(currentColor),
@@ -129,7 +131,7 @@ class _EditTagsState extends State<EditTags> {
       ),
       body: FutureBuilder(
         future: DatabaseHelper.inst.getAllTags(),
-        builder: (BuildContext context, AsyncSnapshot<List<Tag>> snapshot) {
+        builder: (BuildContext context, AsyncSnapshot<List<TagInfo>> snapshot) {
           if (snapshot.hasError) {
             print('Error getting tags: $snapshot.error');
             return const Text('Error getting routines');

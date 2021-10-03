@@ -15,10 +15,10 @@ class AppData {
   static int colorToIndex(Color color) => availableColors.indexOf(color);
 }
 
-class Tag {
+class TagInfo {
   int id;
   String name;
   int color;
 
-  Tag({this.id = -1, required this.name, required this.color});
+  TagInfo({this.id = -1, required this.name, required this.color});
 }
