@@ -1,5 +1,8 @@
+// ignore_for_file: unused_import
+
 import 'package:flutter/material.dart';
 import 'package:workout_app/routes/edit_tags.dart';
+import 'package:workout_app/routes/exercises.dart';
 import 'package:workout_app/routes/new_exercise.dart';
 
 void main() {
@@ -25,7 +28,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.dark,
-      home: const NewExercise(),
+      home: const Exercises(),
     );
   }
 }

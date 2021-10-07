@@ -22,3 +22,11 @@ class TagInfo {
 
   TagInfo({this.id = -1, required this.name, required this.color});
 }
+
+class ExerciseInfo {
+  int id;
+  String name;
+  List<int> tags;
+
+  ExerciseInfo({this.id = -1, required this.name, required this.tags});
+}

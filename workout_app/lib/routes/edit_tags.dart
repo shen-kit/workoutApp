@@ -16,7 +16,7 @@ class EditTags extends StatefulWidget {
 class _EditTagsState extends State<EditTags> {
   final int colorsInRow = 5;
 
-  reloadPage() {
+  void reloadPage() {
     setState(() {});
   }
 
@@ -97,8 +97,10 @@ class _EditTagsState extends State<EditTags> {
                     // create new tag
                     else {
                       DatabaseHelper.inst.createTag(
-                        name,
-                        AppData.colorToIndex(currentColor),
+                        TagInfo(
+                          name: name,
+                          color: AppData.colorToIndex(currentColor),
+                        ),
                       );
                     }
                     // instead of pop so the FutureBuilder reloads

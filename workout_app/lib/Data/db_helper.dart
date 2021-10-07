@@ -44,49 +44,31 @@ class DatabaseHelper {
 
   //#region Tags
 
-  Future<void> createTag(String name, int color) async {
+  Future<void> createTag(TagInfo tag) async {
     final db = await database;
     await db.insert(
       'tags',
       {
-        'name': name,
-        'color': color,
+        'name': tag.name,
+        'color': tag.color,
       },
     );
   }
 
   Future<List<TagInfo>> getAllTags() async {
-    Future<List<int>> getTagIds() async {
-      final db = await database;
-      List<Map<String, dynamic>> results = await db.query(
-        'tags',
-        columns: ['id'],
-        orderBy: 'id ASC',
-      );
-      List<int> ids = [];
-      for (Map<String, dynamic> result in results) {
-        ids.add(result['id']);
-      }
-      return ids;
-    }
-
-    Future<TagInfo> getTagFromId(int id) async {
-      final db = await database;
-      List<Map<String, dynamic>> result = await db.query(
-        'tags',
-        columns: ['name', 'color'],
-        where: 'id = ?',
-        whereArgs: [id],
-      );
-      TagInfo tag =
-          TagInfo(id: id, name: result[0]['name'], color: result[0]['color']);
-      return tag;
-    }
-
-    List<int> ids = await getTagIds();
+    final db = await database;
+    List<Map<String, dynamic>> results = await db.query(
+      'tags',
+      columns: ['id', 'name', 'color'],
+      orderBy: 'id ASC',
+    );
     List<TagInfo> tags = [];
-    for (int id in ids) {
-      tags.add(await getTagFromId(id));
+    for (Map<String, dynamic> result in results) {
+      tags.add(TagInfo(
+        id: result['id'],
+        name: result['name'],
+        color: result['color'],
+      ));
     }
     return tags;
   }
@@ -115,6 +97,58 @@ class DatabaseHelper {
   }
 
   //#endregion Tags
+
+  //#region Exercises
+
+  Future<void> createExercise(ExerciseInfo exercise) async {
+    final db = await database;
+    int exerciseId = await db.insert(
+      'exercises',
+      {
+        'name': exercise.name,
+      },
+    );
+    for (int tag in exercise.tags) {
+      await db.insert(
+        'exerciseTags',
+        {
+          'exerciseId': exerciseId,
+          'tagId': tag,
+        },
+      );
+    }
+  }
+
+  Future<List<ExerciseInfo>> getAllExercises() async {
+    final db = await database;
+    List<Map<String, dynamic>> results = await db.query(
+      'exercises',
+      columns: ['id', 'name'],
+      orderBy: 'name ASC',
+    );
+
+    List<ExerciseInfo> exercises = [];
+    for (Map<String, dynamic> result in results) {
+      ExerciseInfo exercise = ExerciseInfo(
+        id: result['id'],
+        name: result['name'],
+        tags: [],
+      );
+      List<Map<String, dynamic>> tagsResult = await db.query(
+        'exerciseTags',
+        columns: ['tagId'],
+        where: 'exerciseId = ?',
+        whereArgs: [result['id']],
+      );
+      for (Map<String, dynamic> tag in tagsResult) {
+        exercise.tags.add(tag['tagId']);
+      }
+      exercises.add(exercise);
+    }
+    return exercises;
+  }
+
+  //#endregion Exercises
 
   Future<void> deleteDb() async {
     await deleteDatabase(join(await getDatabasesPath(), _dbName));

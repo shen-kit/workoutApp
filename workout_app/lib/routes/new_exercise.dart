@@ -131,7 +131,9 @@ class _NewExerciseState extends State<NewExercise> {
                               color: Colors.white,
                             ),
                           ),
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.pop(context, false);
+                          },
                         ),
                       ),
                       Container(
@@ -151,7 +153,21 @@ class _NewExerciseState extends State<NewExercise> {
                               color: Colors.white,
                             ),
                           ),
-                          onPressed: () {},
+                          onPressed: () {
+                            List<int> tags = [];
+                            for (var entry in tagSelection.entries) {
+                              if (entry.value) {
+                                tags.add(entry.key);
+                              }
+                            }
+                            DatabaseHelper.inst.createExercise(
+                              ExerciseInfo(
+                                name: nameController.text,
+                                tags: tags,
+                              ),
+                            );
+                            Navigator.pop(context, true);
+                          },
                         ),
                       ),
                     ],
@@ -196,15 +212,10 @@ class TagTile extends StatelessWidget {
       child: TextButton(
         child: Text(
           name,
-          style: selected
-              ? const TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                )
-              : const TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.normal,
-                ),
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+          ),
         ),
         style: ButtonStyle(
           shape: MaterialStateProperty.all<RoundedRectangleBorder>(
