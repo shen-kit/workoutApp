@@ -120,7 +120,7 @@ class _EditTagsState extends State<EditTags> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Tags'),
+        title: const Text('Tags'),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),

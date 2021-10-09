@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:workout_app/routes/edit_tags.dart';
 import 'package:workout_app/routes/exercises.dart';
 import 'package:workout_app/routes/new_exercise.dart';
+import 'package:workout_app/routes/routines.dart';
 
 void main() {
   runApp(const MyApp());
@@ -28,7 +29,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.dark,
-      home: const Exercises(),
+      home: const Routines(),
     );
   }
 }

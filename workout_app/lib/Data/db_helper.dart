@@ -46,7 +46,7 @@ class DatabaseHelper {
 
   Future<void> createTag(TagInfo tag) async {
     final db = await database;
-    await db.insert(
+    db.insert(
       'tags',
       {
         'name': tag.name,
@@ -79,7 +79,7 @@ class DatabaseHelper {
       'name': tag.name,
       'color': tag.color,
     };
-    await db.update(
+    db.update(
       'tags',
       row,
       where: 'id = ?',
@@ -109,7 +109,7 @@ class DatabaseHelper {
       },
     );
     for (int tag in exercise.tags) {
-      await db.insert(
+      db.insert(
         'exerciseTags',
         {
           'exerciseId': exerciseId,
@@ -146,6 +146,48 @@ class DatabaseHelper {
       exercises.add(exercise);
     }
     return exercises;
+  }
+
+  Future<void> updateExercise(ExerciseInfo exercise) async {
+    final db = await database;
+    // update exercise name
+    db.update(
+      'exercises',
+      {
+        'name': exercise.name,
+      },
+      where: 'id = ?',
+      whereArgs: [exercise.id],
+    );
+    // recreate tags for the exercise
+    await db.delete(
+      'exerciseTags',
+      where: 'exerciseId = ?',
+      whereArgs: [exercise.id],
+    );
+    for (int id in exercise.tags) {
+      db.insert(
+        'exerciseTags',
+        {
+          'tagId': id,
+          'exerciseId': exercise.id,
+        },
+      );
+    }
+  }
+
+  Future<void> deleteExercise(int id) async {
+    final db = await database;
+    await db.delete(
+      'exercises',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    await db.delete(
+      'exerciseTags',
+      where: 'exerciseId = ?',
+      whereArgs: [id],
+    );
   }
 
   //#endregion Exercises

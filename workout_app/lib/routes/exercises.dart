@@ -7,6 +7,7 @@ import 'package:workout_app/Data/data.dart';
 import 'package:workout_app/Data/db_helper.dart';
 import 'package:workout_app/routes/edit_tags.dart';
 import 'package:workout_app/routes/new_exercise.dart';
+import 'package:workout_app/routes/routines.dart';
 
 class Exercises extends StatefulWidget {
   const Exercises({Key? key}) : super(key: key);
@@ -52,13 +53,13 @@ class _ExercisesState extends State<Exercises> {
             icon: const Icon(Icons.add),
             tooltip: 'New exercise',
             onPressed: () async {
-              bool reload = await Navigator.push(
+              var reload = await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => const NewExercise(),
                 ),
               );
-              if (reload) {
+              if (reload == true) {
                 reloadPage();
               }
             },
@@ -152,7 +153,7 @@ class _ExercisesState extends State<Exercises> {
                 ),
               ),
               Container(
-                color: const Color(0xFF3E3E3E),
+                // color: const Color(0xFF3E3E3E),
                 height: 50,
                 width: double.infinity,
                 child: Row(
@@ -165,7 +166,14 @@ class _ExercisesState extends State<Exercises> {
                           size: 30,
                           color: Colors.white,
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const Routines(),
+                            ),
+                          );
+                        },
                       ),
                     ),
                     Expanded(
@@ -176,11 +184,14 @@ class _ExercisesState extends State<Exercises> {
                           color: Colors.white,
                         ),
                         onPressed: () {},
+                        style: TextButton.styleFrom(
+                          backgroundColor: const Color(0xFF505050),
+                        ),
                       ),
                     ),
                   ],
                 ),
-              )
+              ),
             ],
           );
         },
@@ -214,8 +225,7 @@ class ExerciseTile extends StatelessWidget {
           color: Colors.red,
           icon: Icons.delete,
           onTap: () {
-            //DatabaseHelper.inst.deleteExercise(id);
-            // reload page
+            DatabaseHelper.inst.deleteExercise(id);
             reloadPage();
           },
         )
@@ -230,6 +240,23 @@ class ExerciseTile extends StatelessWidget {
           children: <Widget>[
             TextButton(
               onPressed: () {},
+              onLongPress: () async {
+                var reload = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => NewExercise(
+                      exercise: ExerciseInfo(
+                        id: id,
+                        name: name,
+                        tags: tags,
+                      ),
+                    ),
+                  ),
+                );
+                if (reload == true) {
+                  reloadPage();
+                }
+              },
               child: Text(
                 name,
                 style: const TextStyle(
@@ -238,7 +265,6 @@ class ExerciseTile extends StatelessWidget {
                 ),
               ),
             ),
-
             //divider
             const Positioned(
               left: 0,

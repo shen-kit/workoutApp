@@ -5,7 +5,8 @@ import 'package:workout_app/Data/data.dart';
 import 'package:workout_app/Data/db_helper.dart';
 
 class NewExercise extends StatefulWidget {
-  const NewExercise({Key? key}) : super(key: key);
+  const NewExercise({Key? key, this.exercise}) : super(key: key);
+  final ExerciseInfo? exercise;
 
   @override
   _NewExerciseState createState() => _NewExerciseState();
@@ -14,20 +15,29 @@ class NewExercise extends StatefulWidget {
 class _NewExerciseState extends State<NewExercise> {
   final nameController = TextEditingController();
 
-  // int = tag id, bool = selected
-  Map<int, bool> tagSelection = <int, bool>{};
-  Future<List<TagInfo>> getTags() async {
-    List<TagInfo> tags = await DatabaseHelper.inst.getAllTags();
-    for (TagInfo tag in tags) {
-      if (tagSelection[tag.id] == null) {
-        tagSelection[tag.id] = false;
-      }
+  @override
+  void initState() {
+    super.initState();
+    if (widget.exercise != null) {
+      nameController.text = widget.exercise!.name;
+      tagSelection = widget.exercise!.tags;
     }
-    return tags;
+  }
+
+  // int = tag id, bool = selected
+  List<int> tagSelection = [];
+  Future<List<TagInfo>> getTags() async {
+    return await DatabaseHelper.inst.getAllTags();
   }
 
   void toggleTagSelected(int id) {
-    setState(() => tagSelection[id] = !tagSelection[id]!);
+    setState(() {
+      if (tagSelection.contains(id)) {
+        tagSelection.remove(id);
+      } else {
+        tagSelection.add(id);
+      }
+    });
   }
 
   @override
@@ -98,7 +108,7 @@ class _NewExerciseState extends State<NewExercise> {
                               id: tag.id,
                               name: tag.name,
                               color: tag.color,
-                              selected: tagSelection[tag.id]!,
+                              selected: tagSelection.contains(tag.id),
                               toggleTagSelected: toggleTagSelected,
                             ),
                           )
@@ -147,25 +157,28 @@ class _NewExerciseState extends State<NewExercise> {
                           color: Color(0xFF40C0DC),
                         ),
                         child: TextButton(
-                          child: const Text(
-                            'CREATE',
-                            style: TextStyle(
+                          child: Text(
+                            (widget.exercise == null) ? 'CREATE' : 'UPDATE',
+                            style: const TextStyle(
                               color: Colors.white,
                             ),
                           ),
                           onPressed: () {
-                            List<int> tags = [];
-                            for (var entry in tagSelection.entries) {
-                              if (entry.value) {
-                                tags.add(entry.key);
-                              }
-                            }
-                            DatabaseHelper.inst.createExercise(
-                              ExerciseInfo(
-                                name: nameController.text,
-                                tags: tags,
-                              ),
-                            );
+                            tagSelection.sort();
+                            (widget.exercise == null)
+                                ? DatabaseHelper.inst.createExercise(
+                                    ExerciseInfo(
+                                      name: nameController.text,
+                                      tags: tagSelection,
+                                    ),
+                                  )
+                                : DatabaseHelper.inst.updateExercise(
+                                    ExerciseInfo(
+                                      id: widget.exercise!.id,
+                                      name: nameController.text,
+                                      tags: tagSelection,
+                                    ),
+                                  );
                             Navigator.pop(context, true);
                           },
                         ),
