@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.dark,
-      home: const Routines(),
+      home: const Exercises(),
     );
   }
 }

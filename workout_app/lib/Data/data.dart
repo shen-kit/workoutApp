@@ -30,3 +30,11 @@ class ExerciseInfo {
 
   ExerciseInfo({this.id = -1, required this.name, required this.tags});
 }
+
+class RoutineInfo {
+  int id;
+  String name;
+  String goals;
+
+  RoutineInfo({this.id = -1, required this.name, required this.goals});
+}

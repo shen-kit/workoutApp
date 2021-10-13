@@ -23,7 +23,7 @@ class DatabaseHelper {
   // create the tables in the database
   Future _onCreate(Database db, int version) async {
     db.execute(
-      'CREATE TABLE routines(id INTEGER PRIMARY KEY, name TEXT, goals TEXT)',
+      'CREATE TABLE routines(id INTEGER PRIMARY KEY, name TEXT, goals TEXT, routineOrder INTEGER)',
     );
     db.execute(
       'CREATE TABLE workouts(id INTEGER PRIMARY KEY, routineId INTEGER REFERENCES routines(id), name TEXT)',
@@ -191,6 +191,39 @@ class DatabaseHelper {
   }
 
   //#endregion Exercises
+
+  //#region Routines
+
+  Future<void> createRoutine(RoutineInfo routine) async {
+    final db = await database;
+    db.insert(
+      'routines',
+      {
+        'name': routine.name,
+        'goals': routine.goals,
+      },
+    );
+  }
+
+  Future<List<RoutineInfo>> getAllRoutines() async {
+    final db = await database;
+    List<Map<String, dynamic>> results = await db.query(
+      'routines',
+      columns: ['id', 'name', 'goals'],
+      orderBy: 'routineOrder DESC',
+    );
+    List<RoutineInfo> routines = [];
+    for (Map<String, dynamic> result in results) {
+      routines.add(RoutineInfo(
+        id: result['id'],
+        name: result['name'],
+        goals: result['goals'],
+      ));
+    }
+    return routines;
+  }
+
+  //#endregion Routines
 
   Future<void> deleteDb() async {
     await deleteDatabase(join(await getDatabasesPath(), _dbName));

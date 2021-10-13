@@ -38,10 +38,10 @@ class _EditTagsState extends State<EditTags> {
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
             child: Column(
               children: [
-                const Text(
-                  'Edit Tag',
+                Text(
+                  (id == -1) ? 'New Tag' : 'Edit Tag',
                   textAlign: TextAlign.left,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
@@ -127,6 +127,7 @@ class _EditTagsState extends State<EditTags> {
             tooltip: 'New tag',
             onPressed: () {
               showEditTagDialog(context, id: -1);
+              // DatabaseHelper.inst.deleteDb();
             },
           ),
         ],
@@ -136,7 +137,7 @@ class _EditTagsState extends State<EditTags> {
         builder: (BuildContext context, AsyncSnapshot<List<TagInfo>> snapshot) {
           if (snapshot.hasError) {
             print('Error getting tags: $snapshot.error');
-            return const Text('Error getting routines');
+            return const Text('Error getting tags');
           }
           if (!snapshot.hasData) {
             return Center(

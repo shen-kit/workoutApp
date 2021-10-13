@@ -47,7 +47,7 @@ class _ExercisesState extends State<Exercises> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Tags'),
+        title: const Text('Exercises'),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -67,13 +67,14 @@ class _ExercisesState extends State<Exercises> {
           IconButton(
             icon: const Icon(Icons.new_label),
             tooltip: 'Edit labels',
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => const EditTags(),
                 ),
               );
+              setState(() {});
             },
           ),
         ],
@@ -153,7 +154,7 @@ class _ExercisesState extends State<Exercises> {
                 ),
               ),
               Container(
-                // color: const Color(0xFF3E3E3E),
+                color: const Color(0xFF3E3E3E),
                 height: 50,
                 width: double.infinity,
                 child: Row(
