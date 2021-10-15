@@ -35,6 +35,12 @@ class RoutineInfo {
   int id;
   String name;
   String goals;
+  int order;
 
-  RoutineInfo({this.id = -1, required this.name, required this.goals});
+  RoutineInfo({
+    this.id = -1,
+    required this.name,
+    required this.goals,
+    this.order = -1,
+  });
 }

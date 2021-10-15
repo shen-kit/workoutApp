@@ -196,21 +196,32 @@ class DatabaseHelper {
 
   Future<void> createRoutine(RoutineInfo routine) async {
     final db = await database;
-    db.insert(
+    var result = await db.query(
+      'routines',
+      columns: ['routineOrder'],
+      limit: 1,
+      orderBy: 'routineOrder DESC',
+    );
+    int orderNumber = (result.isNotEmpty)
+        ? int.parse(result[0]['routineOrder'].toString()) + 1
+        : 0;
+    await db.insert(
       'routines',
       {
         'name': routine.name,
         'goals': routine.goals,
+        'routineOrder': orderNumber,
       },
     );
+    await reorderRoutines(orderNumber, 0);
   }
 
   Future<List<RoutineInfo>> getAllRoutines() async {
     final db = await database;
     List<Map<String, dynamic>> results = await db.query(
       'routines',
-      columns: ['id', 'name', 'goals'],
-      orderBy: 'routineOrder DESC',
+      columns: ['id', 'name', 'goals', 'routineOrder'],
+      orderBy: 'routineOrder ASC',
     );
     List<RoutineInfo> routines = [];
     for (Map<String, dynamic> result in results) {
@@ -218,9 +229,88 @@ class DatabaseHelper {
         id: result['id'],
         name: result['name'],
         goals: result['goals'],
+        order: result['routineOrder'],
       ));
     }
     return routines;
+  }
+
+  Future<void> updateRoutine(RoutineInfo routine) async {
+    final db = await database;
+    // update exercise name
+    db.update(
+      'routines',
+      {
+        'name': routine.name,
+        'goals': routine.goals,
+      },
+      where: 'id = ?',
+      whereArgs: [routine.id],
+    );
+  }
+
+  Future<void> reorderRoutines(int oldIndex, int newIndex) async {
+    final db = await database;
+
+    List<RoutineInfo> oldRoutineInfo = await getAllRoutines();
+    oldRoutineInfo.insert(newIndex, oldRoutineInfo.removeAt(oldIndex));
+
+    await db.delete('routines');
+
+    List<RoutineInfo> newRoutineInfo = [];
+    for (var i = 0; i < oldRoutineInfo.length; i++) {
+      final info = oldRoutineInfo[i];
+      newRoutineInfo.add(
+        RoutineInfo(
+          id: info.id,
+          name: info.name,
+          goals: info.goals,
+          order: i,
+        ),
+      );
+    }
+
+    for (RoutineInfo routine in newRoutineInfo) {
+      await db.insert(
+        'routines',
+        {
+          'id': routine.id,
+          'name': routine.name,
+          'goals': routine.goals,
+          'routineOrder': routine.order,
+        },
+      );
+    }
+  }
+
+  Future<void> deleteRoutine(int id) async {
+    final db = await database;
+
+    // get and delete all related workouts and workout exercises before deleting the routine
+    List<Map<String, dynamic>> results = await db.query(
+      'workouts',
+      columns: ['id'],
+      where: 'routineId = ?',
+      whereArgs: [id],
+    );
+    for (Map<String, dynamic> result in results) {
+      final workoutId = result['id'];
+      db.delete(
+        'workoutExercises',
+        where: 'workoutId = ?',
+        whereArgs: [workoutId],
+      );
+    }
+    db.delete(
+      'workouts',
+      where: 'routineId = ?',
+      whereArgs: [id],
+    );
+    await db.delete(
+      'routines',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   //#endregion Routines

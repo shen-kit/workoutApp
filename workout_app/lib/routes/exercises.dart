@@ -77,6 +77,10 @@ class _ExercisesState extends State<Exercises> {
               setState(() {});
             },
           ),
+          IconButton(
+            onPressed: () => DatabaseHelper.inst.deleteDb(),
+            icon: const Icon(Icons.delete),
+          ),
         ],
       ),
       body: FutureBuilder(
@@ -153,49 +157,44 @@ class _ExercisesState extends State<Exercises> {
                   },
                 ),
               ),
-              Container(
-                color: const Color(0xFF3E3E3E),
-                height: 50,
-                width: double.infinity,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        child: const Icon(
-                          Icons.format_list_bulleted_outlined,
-                          size: 30,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const Routines(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    Expanded(
-                      child: TextButton(
-                        child: const Icon(
-                          Icons.fitness_center,
-                          size: 30,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {},
-                        style: TextButton.styleFrom(
-                          backgroundColor: const Color(0xFF505050),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           );
         },
+      ),
+      bottomNavigationBar: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          Expanded(
+            child: TextButton(
+              child: const Icon(
+                Icons.format_list_bulleted_outlined,
+                size: 30,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const Routines(),
+                  ),
+                );
+              },
+            ),
+          ),
+          Expanded(
+            child: TextButton(
+              child: const Icon(
+                Icons.fitness_center,
+                size: 30,
+                color: Colors.white,
+              ),
+              onPressed: () {},
+              style: TextButton.styleFrom(
+                backgroundColor: const Color(0xFF505050),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

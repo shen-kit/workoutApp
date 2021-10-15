@@ -71,21 +71,22 @@ class _RoutinesState extends State<Routines> {
                       color: Color(0xFF90CAF9),
                     ),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     final name = nameController.text;
                     final goals = goalsController.text;
                     // edit existing
                     if (id != -1) {
-                      // DatabaseHelper.inst.updateRoutine(
-                      //   RoutineInfo(
-                      //     id: id,
-                      //     name: name,
-                      //   ),
-                      // );
+                      await DatabaseHelper.inst.updateRoutine(
+                        RoutineInfo(
+                          id: id,
+                          name: name,
+                          goals: goals,
+                        ),
+                      );
                     }
-                    // create new tag
+                    // create new routine
                     else {
-                      DatabaseHelper.inst.createRoutine(
+                      await DatabaseHelper.inst.createRoutine(
                         RoutineInfo(
                           name: name,
                           goals: goals,
@@ -144,61 +145,58 @@ class _RoutinesState extends State<Routines> {
               ),
             ],
           ),
-          body: Column(
+          body: ReorderableListView.builder(
+            onReorder: (int oldIndex, int newIndex) async {
+              if (oldIndex < newIndex) {
+                newIndex -= 1;
+              }
+              await DatabaseHelper.inst.reorderRoutines(oldIndex, newIndex);
+              setState(() {});
+            },
+            itemCount: snapshot.data!.length,
+            itemBuilder: (context, i) {
+              return RoutineTile(
+                key: Key(snapshot.data![i].id.toString()),
+                id: snapshot.data![i].id,
+                name: snapshot.data![i].name,
+                goals: snapshot.data![i].goals,
+                order: snapshot.data![i].order,
+                showEditRoutineDialog: showEditRoutineDialog,
+                reloadPage: reloadPage,
+              );
+            },
+          ),
+          bottomNavigationBar: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               Expanded(
-                child: ListView.builder(
-                  itemCount: snapshot.data!.length,
-                  itemBuilder: (context, i) {
-                    return RoutineTile(
-                      id: snapshot.data![i].id,
-                      name: snapshot.data![i].name,
-                      goals: snapshot.data![i].goals,
-                      showEditRoutineDialog: showEditRoutineDialog,
-                      reloadPage: reloadPage,
-                    );
-                  },
+                child: TextButton(
+                  child: const Icon(
+                    Icons.format_list_bulleted_outlined,
+                    size: 30,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {},
+                  style: TextButton.styleFrom(
+                    backgroundColor: const Color(0xFF505050),
+                  ),
                 ),
               ),
-              // footer
-              Container(
-                color: const Color(0xFF3E3E3E),
-                height: 50,
-                width: double.infinity,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        child: const Icon(
-                          Icons.format_list_bulleted_outlined,
-                          size: 30,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {},
-                        style: TextButton.styleFrom(
-                          backgroundColor: const Color(0xFF505050),
-                        ),
+              Expanded(
+                child: TextButton(
+                  child: const Icon(
+                    Icons.fitness_center,
+                    size: 30,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const Exercises(),
                       ),
-                    ),
-                    Expanded(
-                      child: TextButton(
-                        child: const Icon(
-                          Icons.fitness_center,
-                          size: 30,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const Exercises(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
               ),
             ],
@@ -214,6 +212,7 @@ class RoutineTile extends StatelessWidget {
     required this.id,
     required this.name,
     required this.goals,
+    required this.order,
     required this.showEditRoutineDialog,
     required this.reloadPage,
     Key? key,
@@ -222,60 +221,76 @@ class RoutineTile extends StatelessWidget {
   final int id;
   final String name;
   final String goals;
+  final int order;
   final Function showEditRoutineDialog;
   final Function reloadPage;
 
   @override
   Widget build(BuildContext context) {
-    return Slidable(
-      key: Key(id.toString()),
-      actionPane: const SlidableScrollActionPane(),
-      actions: <Widget>[
-        IconSlideAction(
-          caption: 'Delete',
-          color: Colors.red,
-          icon: Icons.delete,
-          onTap: () {
-            // DatabaseHelper.inst.deleteRoutine(id);
-            // reload page
-            reloadPage();
-          },
-        )
-      ],
-      actionExtentRatio: 1 / 5,
-      child: SizedBox(
-        height: 60,
-        width: double.maxFinite,
-        child: Stack(
-          alignment: Alignment.center,
-          fit: StackFit.expand,
-          children: <Widget>[
-            TextButton(
-              onPressed: () {},
-              onLongPress: () => showEditRoutineDialog(
-                context,
-                id: id,
-                oldName: name,
-                oldGoals: goals,
-              ),
-              child: Text(
-                name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      minVerticalPadding: 0,
+      onTap: () {},
+      onLongPress: () => showEditRoutineDialog(
+        context,
+        id: id,
+        oldName: name,
+        oldGoals: goals,
+      ),
+      title: Slidable(
+        key: Key(id.toString()),
+        actionPane: const SlidableScrollActionPane(),
+        actions: <Widget>[
+          IconSlideAction(
+            caption: 'Delete',
+            color: Colors.red,
+            icon: Icons.delete,
+            onTap: () async {
+              await DatabaseHelper.inst.deleteRoutine(id);
+              reloadPage();
+            },
+          )
+        ],
+        actionExtentRatio: 1 / 5,
+        child: SizedBox(
+          height: 60,
+          width: double.maxFinite,
+          child: Stack(
+            alignment: Alignment.center,
+            fit: StackFit.expand,
+            children: <Widget>[
+              Center(
+                child: Text(
+                  name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                  ),
                 ),
               ),
-            ),
-            //divider
-            const Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Divider(height: 1, thickness: 1),
-            ),
-          ],
+              //divider
+              const Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Divider(height: 1, thickness: 1),
+              ),
+              //reorderable handle
+              Align(
+                alignment: Alignment.centerRight,
+                child: ReorderableDragStartListener(
+                  index: order,
+                  child: const Icon(
+                    Icons.drag_indicator,
+                    color: Color(0xAAEEEEFF),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
+      // trailing: ,
     );
   }
 }
