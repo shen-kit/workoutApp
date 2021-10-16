@@ -82,11 +82,11 @@ class _EditTagsState extends State<EditTags> {
                       color: Color(0xFF90CAF9),
                     ),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     final name = nameController.text;
                     // edit existing
                     if (id != -1) {
-                      DatabaseHelper.inst.updateTag(
+                      await DatabaseHelper.inst.updateTag(
                         TagInfo(
                           id: id,
                           name: name,
@@ -96,7 +96,7 @@ class _EditTagsState extends State<EditTags> {
                     }
                     // create new tag
                     else {
-                      DatabaseHelper.inst.createTag(
+                      await DatabaseHelper.inst.createTag(
                         TagInfo(
                           name: name,
                           color: AppData.colorToIndex(currentColor),
@@ -158,10 +158,18 @@ class _EditTagsState extends State<EditTags> {
               ),
             );
           }
-          return ListView.builder(
+          return ReorderableListView.builder(
+            onReorder: (int oldIndex, int newIndex) async {
+              if (oldIndex < newIndex) {
+                newIndex -= 1;
+              }
+              await DatabaseHelper.inst.reorderTags(oldIndex, newIndex);
+              setState(() {});
+            },
             itemCount: snapshot.data!.length,
             itemBuilder: (context, i) {
               return TagTile(
+                key: Key(snapshot.data![i].id.toString()),
                 id: snapshot.data![i].id,
                 name: snapshot.data![i].name,
                 color: AppData.availableColors[snapshot.data![i].color],
@@ -194,66 +202,70 @@ class TagTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Slidable(
-      key: Key(id.toString()),
-      actionPane: const SlidableScrollActionPane(),
-      actions: <Widget>[
-        IconSlideAction(
-          caption: 'Delete',
-          color: Colors.red,
-          icon: Icons.delete,
-          onTap: () {
-            DatabaseHelper.inst.deleteTag(id);
-            // reload page
-            reloadPage();
-          },
-        )
-      ],
-      actionExtentRatio: 1 / 5,
-      child: SizedBox(
-        height: 60,
-        width: double.maxFinite,
-        child: Stack(
-          alignment: Alignment.center,
-          fit: StackFit.expand,
-          children: <Widget>[
-            TextButton(
-              onPressed: () {
-                showEditTagDialog(
-                  context,
-                  id: id,
-                  oldName: name,
-                  currentColor: color,
-                );
-              },
-              child: Text(
-                name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      minVerticalPadding: 0,
+      title: Slidable(
+        key: Key(id.toString()),
+        actionPane: const SlidableScrollActionPane(),
+        actions: <Widget>[
+          IconSlideAction(
+            caption: 'Delete',
+            color: Colors.red,
+            icon: Icons.delete,
+            onTap: () {
+              DatabaseHelper.inst.deleteTag(id);
+              // reload page
+              reloadPage();
+            },
+          )
+        ],
+        actionExtentRatio: 1 / 5,
+        child: SizedBox(
+          height: 60,
+          width: double.maxFinite,
+          child: Stack(
+            alignment: Alignment.center,
+            fit: StackFit.expand,
+            children: <Widget>[
+              TextButton(
+                onPressed: () {
+                  showEditTagDialog(
+                    context,
+                    id: id,
+                    oldName: name,
+                    currentColor: color,
+                  );
+                },
+                child: Text(
+                  name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                  ),
                 ),
               ),
-            ),
-            // tag colour circle
-            Positioned(
-              left: 10,
-              child: Container(
-                height: 20,
-                width: 20,
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(100),
+              // tag colour circle
+              Positioned(
+                left: 10,
+                child: Container(
+                  height: 20,
+                  width: 20,
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(100),
+                  ),
                 ),
               ),
-            ),
-            //divider
-            const Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Divider(height: 1, thickness: 1),
-            ),
-          ],
+              //divider
+              const Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Divider(height: 1, thickness: 1),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -19,8 +19,14 @@ class TagInfo {
   int id;
   String name;
   int color;
+  int order;
 
-  TagInfo({this.id = -1, required this.name, required this.color});
+  TagInfo({
+    this.id = -1,
+    required this.name,
+    required this.color,
+    this.order = -1,
+  });
 }
 
 class ExerciseInfo {

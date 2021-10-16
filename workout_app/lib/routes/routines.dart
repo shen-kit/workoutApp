@@ -5,6 +5,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:workout_app/Data/data.dart';
 import 'package:workout_app/Data/db_helper.dart';
 import 'package:workout_app/routes/exercises.dart';
+import 'package:workout_app/routes/routine.dart';
 
 class Routines extends StatefulWidget {
   const Routines({Key? key}) : super(key: key);
@@ -230,7 +231,10 @@ class RoutineTile extends StatelessWidget {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       minVerticalPadding: 0,
-      onTap: () {},
+      onTap: () {
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => const Routine()));
+      },
       onLongPress: () => showEditRoutineDialog(
         context,
         id: id,

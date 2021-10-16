@@ -29,7 +29,7 @@ class DatabaseHelper {
       'CREATE TABLE workouts(id INTEGER PRIMARY KEY, routineId INTEGER REFERENCES routines(id), name TEXT)',
     );
     db.execute(
-      'CREATE TABLE tags(id INTEGER PRIMARY KEY, name TEXT, color INTEGER)',
+      'CREATE TABLE tags(id INTEGER PRIMARY KEY, name TEXT, color INTEGER, tagOrder)',
     );
     db.execute(
       'CREATE TABLE exercises(id INTEGER PRIMARY KEY, name TEXT)',
@@ -46,11 +46,21 @@ class DatabaseHelper {
 
   Future<void> createTag(TagInfo tag) async {
     final db = await database;
+    var result = await db.query(
+      'tags',
+      columns: ['tagOrder'],
+      limit: 1,
+      orderBy: 'tagOrder DESC',
+    );
+    int orderNumber = (result.isNotEmpty)
+        ? int.parse(result[0]['tagOrder'].toString()) + 1
+        : 0;
     db.insert(
       'tags',
       {
         'name': tag.name,
         'color': tag.color,
+        'tagOrder': orderNumber,
       },
     );
   }
@@ -60,7 +70,7 @@ class DatabaseHelper {
     List<Map<String, dynamic>> results = await db.query(
       'tags',
       columns: ['id', 'name', 'color'],
-      orderBy: 'id ASC',
+      orderBy: 'tagOrder ASC',
     );
     List<TagInfo> tags = [];
     for (Map<String, dynamic> result in results) {
@@ -87,8 +97,47 @@ class DatabaseHelper {
     );
   }
 
+  Future<void> reorderTags(int oldIndex, int newIndex) async {
+    final db = await database;
+
+    List<TagInfo> oldTagsInfo = await getAllTags();
+    oldTagsInfo.insert(newIndex, oldTagsInfo.removeAt(oldIndex));
+
+    await db.delete('tags');
+
+    List<TagInfo> newTagsInfo = [];
+    for (var i = 0; i < oldTagsInfo.length; i++) {
+      final info = oldTagsInfo[i];
+      newTagsInfo.add(
+        TagInfo(
+          id: info.id,
+          name: info.name,
+          color: info.color,
+          order: i,
+        ),
+      );
+    }
+
+    for (TagInfo tag in newTagsInfo) {
+      await db.insert(
+        'tags',
+        {
+          'id': tag.id,
+          'name': tag.name,
+          'color': tag.color,
+          'tagOrder': tag.order,
+        },
+      );
+    }
+  }
+
   Future<void> deleteTag(int id) async {
     final db = await database;
+    db.delete(
+      'exerciseTags',
+      where: 'tagId = ?',
+      whereArgs: [id],
+    );
     db.delete(
       'tags',
       where: 'id = ?',
