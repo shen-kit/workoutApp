@@ -51,6 +51,8 @@ class _RoutinesState extends State<Routines> {
                 const SizedBox(height: 20),
                 TextField(
                   controller: nameController,
+                  textCapitalization: TextCapitalization.words,
+                  autocorrect: false,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     hintText: 'Name',
@@ -59,6 +61,8 @@ class _RoutinesState extends State<Routines> {
                 const SizedBox(height: 20),
                 TextField(
                   controller: goalsController,
+                  textCapitalization: TextCapitalization.words,
+                  autocorrect: false,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     hintText: 'Goals (comma separated)',
@@ -233,7 +237,15 @@ class RoutineTile extends StatelessWidget {
       minVerticalPadding: 0,
       onTap: () {
         Navigator.push(
-            context, MaterialPageRoute(builder: (context) => const Routine()));
+          context,
+          MaterialPageRoute(
+            builder: (context) => Routine(
+              routineId: id,
+              name: name,
+              goals: goals,
+            ),
+          ),
+        );
       },
       onLongPress: () => showEditRoutineDialog(
         context,

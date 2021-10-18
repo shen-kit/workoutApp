@@ -364,6 +364,58 @@ class DatabaseHelper {
 
   //#endregion Routines
 
+  //#region Workouts
+
+  Future<void> createWorkout(WorkoutInfo workout) async {
+    final db = await database;
+    await db.insert(
+      'workouts',
+      {
+        'routineId': workout.routineId,
+        'name': workout.name,
+      },
+    );
+  }
+
+  Future<List<WorkoutInfo>> getWorkoutsForRoutine(int routineId) async {
+    final db = await database;
+    List<Map<String, dynamic>> results = await db.query(
+      'workouts',
+      columns: ['id', 'routineId', 'name'],
+      where: 'routineId = ?',
+      whereArgs: [routineId],
+    );
+
+    List<WorkoutInfo> workouts = [];
+    for (var result in results) {
+      workouts.add(
+        WorkoutInfo(
+          id: result['id'],
+          routineId: result['routineId'],
+          name: result['name'],
+        ),
+      );
+    }
+
+    return workouts;
+  }
+
+  Future<void> deleteWorkout(int id) async {
+    final db = await database;
+    await db.delete(
+      'workoutExercises',
+      where: 'workoutId = ?',
+      whereArgs: [id],
+    );
+    await db.delete(
+      'workouts',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  //#endregion Workouts
+
   Future<void> deleteDb() async {
     await deleteDatabase(join(await getDatabasesPath(), _dbName));
     print('deleted database');

@@ -49,6 +49,8 @@ class _EditTagsState extends State<EditTags> {
                 const SizedBox(height: 20),
                 TextField(
                   controller: nameController,
+                  textCapitalization: TextCapitalization.words,
+                  autocorrect: false,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     hintText: 'Name',

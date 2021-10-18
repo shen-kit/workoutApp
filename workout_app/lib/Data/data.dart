@@ -50,3 +50,11 @@ class RoutineInfo {
     this.order = -1,
   });
 }
+
+class WorkoutInfo {
+  int id;
+  int routineId;
+  String name;
+
+  WorkoutInfo({this.id = -1, required this.routineId, required this.name});
+}
