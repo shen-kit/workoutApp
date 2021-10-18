@@ -26,7 +26,7 @@ class DatabaseHelper {
       'CREATE TABLE routines(id INTEGER PRIMARY KEY, name TEXT, goals TEXT, routineOrder INTEGER)',
     );
     db.execute(
-      'CREATE TABLE workouts(id INTEGER PRIMARY KEY, routineId INTEGER REFERENCES routines(id), name TEXT)',
+      'CREATE TABLE workouts(id INTEGER PRIMARY KEY, routineId INTEGER REFERENCES routines(id), name TEXT, workoutOrder INTEGER)',
     );
     db.execute(
       'CREATE TABLE tags(id INTEGER PRIMARY KEY, name TEXT, color INTEGER, tagOrder)',
@@ -38,7 +38,7 @@ class DatabaseHelper {
       'CREATE TABLE exerciseTags(exerciseId INTEGER REFERENCES exercises(id), tagId INTEGER REFERENCES tags(id))',
     );
     db.execute(
-      'CREATE TABLE workoutExercises(id INTEGER PRIMARY KEY, workoutId INTEGER REFERENCES workouts(id), exerciseId INTEGER REFERENCES exercises(id), sets TEXT, reps TEXT, notes TEXT, position INTEGER, superset INTEGER)',
+      'CREATE TABLE workoutExercises(id INTEGER PRIMARY KEY, workoutId INTEGER REFERENCES workouts(id), exerciseId INTEGER REFERENCES exercises(id), sets TEXT, reps TEXT, notes TEXT, exerciseOrder INTEGER, superset INTEGER)',
     );
   }
 
@@ -368,11 +368,23 @@ class DatabaseHelper {
 
   Future<void> createWorkout(WorkoutInfo workout) async {
     final db = await database;
+    var result = await db.query(
+      'workouts',
+      columns: ['workoutOrder'],
+      where: 'routineId = ?',
+      whereArgs: [workout.routineId],
+      limit: 1,
+      orderBy: 'workoutOrder DESC',
+    );
+    int orderNumber = (result.isNotEmpty)
+        ? int.parse(result[0]['workoutOrder'].toString()) + 1
+        : 0;
     await db.insert(
       'workouts',
       {
         'routineId': workout.routineId,
         'name': workout.name,
+        'workoutOrder': orderNumber,
       },
     );
   }
@@ -384,6 +396,7 @@ class DatabaseHelper {
       columns: ['id', 'routineId', 'name'],
       where: 'routineId = ?',
       whereArgs: [routineId],
+      orderBy: 'workoutOrder ASC',
     );
 
     List<WorkoutInfo> workouts = [];
@@ -398,6 +411,45 @@ class DatabaseHelper {
     }
 
     return workouts;
+  }
+
+  Future<void> reorderWorkouts(
+      int routineId, int oldIndex, int newIndex) async {
+    final db = await database;
+
+    List<WorkoutInfo> oldWorkoutInfo = await getWorkoutsForRoutine(routineId);
+    oldWorkoutInfo.insert(newIndex, oldWorkoutInfo.removeAt(oldIndex));
+
+    await db.delete(
+      'workouts',
+      where: 'routineId = ?',
+      whereArgs: [routineId],
+    );
+
+    List<WorkoutInfo> newWorkoutInfo = [];
+    for (var i = 0; i < oldWorkoutInfo.length; i++) {
+      final info = oldWorkoutInfo[i];
+      newWorkoutInfo.add(
+        WorkoutInfo(
+          id: info.id,
+          name: info.name,
+          routineId: routineId,
+          order: i,
+        ),
+      );
+    }
+
+    for (WorkoutInfo workout in newWorkoutInfo) {
+      await db.insert(
+        'workouts',
+        {
+          'id': workout.id,
+          'name': workout.name,
+          'routineId': workout.routineId,
+          'workoutOrder': workout.order,
+        },
+      );
+    }
   }
 
   Future<void> deleteWorkout(int id) async {

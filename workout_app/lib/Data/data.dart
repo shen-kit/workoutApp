@@ -55,6 +55,12 @@ class WorkoutInfo {
   int id;
   int routineId;
   String name;
+  int order;
 
-  WorkoutInfo({this.id = -1, required this.routineId, required this.name});
+  WorkoutInfo({
+    this.id = -1,
+    required this.routineId,
+    required this.name,
+    this.order = -1,
+  });
 }

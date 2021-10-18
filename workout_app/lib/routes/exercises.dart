@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:confirm_dialog/confirm_dialog.dart';
 
 import 'package:workout_app/Data/data.dart';
 import 'package:workout_app/Data/db_helper.dart';
@@ -78,7 +79,15 @@ class _ExercisesState extends State<Exercises> {
             },
           ),
           IconButton(
-            onPressed: () => DatabaseHelper.inst.deleteDb(),
+            onPressed: () async {
+              if (await confirm(
+                context,
+                title: const Text('Delete the database?'),
+                content: const Text('Restart the app after to avoid errors'),
+              )) {
+                DatabaseHelper.inst.deleteDb();
+              }
+            },
             icon: const Icon(Icons.delete),
           ),
         ],

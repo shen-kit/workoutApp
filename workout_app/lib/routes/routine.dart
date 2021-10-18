@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:workout_app/Data/data.dart';
 import 'package:workout_app/Data/db_helper.dart';
-import 'package:confirm_dialog/confirm_dialog.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 class Routine extends StatefulWidget {
@@ -129,50 +128,68 @@ class _RoutineState extends State<Routine> {
               ),
             ],
           ),
-          body: ListView.builder(
+          body: ReorderableListView.builder(
+            padding: const EdgeInsets.all(20),
+            onReorder: (int oldIndex, int newIndex) async {
+              // don't allow reordering the goals section
+              if (oldIndex == 0 || newIndex == 0) return;
+              if (oldIndex < newIndex) {
+                newIndex--;
+              }
+              // -1 for goals
+              await DatabaseHelper.inst.reorderWorkouts(
+                  widget.routineId, oldIndex - 1, newIndex - 1);
+              setState(() {});
+            },
             itemCount: snapshot.data!.length + 1,
             itemBuilder: (context, i) {
               // goals
               if (i == 0) {
-                return Container(
-                  margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                  padding: const EdgeInsets.only(bottom: 20),
-                  decoration: const BoxDecoration(
-                    color: Color(0x20FFFFFF),
-                    borderRadius: BorderRadius.all(Radius.circular(8)),
-                  ),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      const Text(
-                        'GOALS',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
+                return ListTile(
+                  key: const Key('goals'),
+                  contentPadding: EdgeInsets.zero,
+                  onLongPress: () {}, // non-reorderable
+                  title: Container(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    margin: const EdgeInsets.only(bottom: 10),
+                    decoration: const BoxDecoration(
+                      color: Color(0x20FFFFFF),
+                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                    ),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 20),
+                        const Text(
+                          'GOALS',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      const SizedBox(
-                        width: 70,
-                        height: 1,
-                        child: Divider(
-                          thickness: 1,
-                          color: Color(0xFF40C0DC),
+                        const SizedBox(
+                          width: 70,
+                          height: 1,
+                          child: Divider(
+                            thickness: 1,
+                            color: Color(0xFF40C0DC),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        goalsText!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          height: 2,
+                        const SizedBox(height: 10),
+                        Text(
+                          goalsText!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            height: 2,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               }
               return Workout(
+                key: Key(snapshot.data![i - 1].id.toString()),
                 id: snapshot.data![i - 1].id,
                 name: snapshot.data![i - 1].name,
                 reloadPage: () {
@@ -201,108 +218,102 @@ class Workout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Slidable(
-          key: Key(id.toString()),
-          actionPane: const SlidableStrechActionPane(),
-          actions: <Widget>[
-            IconSlideAction(
-              caption: 'Delete',
-              color: Colors.red,
-              icon: Icons.delete,
-              onTap: () async {
-                await DatabaseHelper.inst.deleteWorkout(id);
-                reloadPage();
-              },
-            )
+    return Container(
+      padding: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      decoration: const BoxDecoration(
+        color: Color(0x20FFFFFF),
+        borderRadius: BorderRadius.all(Radius.circular(8)),
+      ),
+      child: Slidable(
+        actionPane: const SlidableStrechActionPane(),
+        actions: <Widget>[
+          IconSlideAction(
+            caption: 'Delete',
+            color: Colors.red,
+            icon: Icons.delete,
+            onTap: () async {
+              await DatabaseHelper.inst.deleteWorkout(id);
+              reloadPage();
+            },
+          )
+        ],
+        child: Column(
+          children: [
+            // title row (title + edit button)
+            SizedBox(
+              height: 50,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Align(
+                    alignment: Alignment.center,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          name,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 70,
+                          height: 1,
+                          child: Divider(
+                            thickness: 1,
+                            color: Color(0xFF40C0DC),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.edit),
+                      splashRadius: 24,
+                    ),
+                  )
+                ],
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              width: double.infinity,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  WorkoutExercise(
+                    name: 'BTW HSPU',
+                    sets: '4',
+                    reps: '4-6',
+                    notes: 'One foot off wall, minimal arch',
+                    rest: 90,
+                    superset: 1,
+                  ),
+                  WorkoutExercise(
+                    name: 'Front Lever Ring Raise',
+                    sets: '4',
+                    reps: '3-5',
+                    notes: '',
+                    rest: 90,
+                    superset: 1,
+                  ),
+                  WorkoutExercise(
+                    name: 'Planche Lean',
+                    sets: '3',
+                    reps: '10s',
+                    notes: '',
+                    rest: 30,
+                    superset: 2,
+                  ),
+                ],
+              ),
+            ),
           ],
-          child: Container(
-            padding: const EdgeInsets.only(bottom: 20),
-            decoration: const BoxDecoration(
-              color: Color(0x20FFFFFF),
-              borderRadius: BorderRadius.all(Radius.circular(8)),
-            ),
-            child: Column(
-              children: [
-                // title row (title + edit button)
-                SizedBox(
-                  height: 50,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Align(
-                        alignment: Alignment.center,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              name,
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 70,
-                              height: 1,
-                              child: Divider(
-                                thickness: 1,
-                                color: Color(0xFF40C0DC),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.edit),
-                          splashRadius: 24,
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  width: double.infinity,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      WorkoutExercise(
-                        name: 'BTW HSPU',
-                        sets: '4',
-                        reps: '4-6',
-                        notes: 'One foot off wall, minimal arch',
-                        rest: 90,
-                        superset: 1,
-                      ),
-                      WorkoutExercise(
-                        name: 'Front Lever Ring Raise',
-                        sets: '4',
-                        reps: '3-5',
-                        notes: '',
-                        rest: 90,
-                        superset: 1,
-                      ),
-                      WorkoutExercise(
-                        name: 'Planche Lean',
-                        sets: '3',
-                        reps: '10s',
-                        notes: '',
-                        rest: 30,
-                        superset: 2,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );

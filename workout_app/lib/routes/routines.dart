@@ -153,7 +153,7 @@ class _RoutinesState extends State<Routines> {
           body: ReorderableListView.builder(
             onReorder: (int oldIndex, int newIndex) async {
               if (oldIndex < newIndex) {
-                newIndex -= 1;
+                newIndex--;
               }
               await DatabaseHelper.inst.reorderRoutines(oldIndex, newIndex);
               setState(() {});
