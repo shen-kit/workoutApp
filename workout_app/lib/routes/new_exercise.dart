@@ -220,7 +220,7 @@ class TagTile extends StatelessWidget {
         borderRadius: const BorderRadius.all(
           Radius.circular(100),
         ),
-        color: AppData.availableColors[color],
+        color: AppData.tagColors[color],
       ),
       child: TextButton(
         child: Text(

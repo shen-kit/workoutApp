@@ -61,7 +61,7 @@ class _EditTagsState extends State<EditTags> {
                   pickerColor: currentColor,
                   onColorChanged: (Color color) =>
                       setState(() => currentColor = color),
-                  availableColors: AppData.availableColors,
+                  availableColors: AppData.tagColors,
                   layoutBuilder: (BuildContext context, List<Color> colors,
                       PickerItem child) {
                     return SizedBox(
@@ -174,7 +174,7 @@ class _EditTagsState extends State<EditTags> {
                 key: Key(snapshot.data![i].id.toString()),
                 id: snapshot.data![i].id,
                 name: snapshot.data![i].name,
-                color: AppData.availableColors[snapshot.data![i].color],
+                color: AppData.tagColors[snapshot.data![i].color],
                 showEditTagDialog: showEditTagDialog,
                 reloadPage: reloadPage,
               );
