@@ -44,7 +44,9 @@ class _NewExerciseState extends State<NewExercise> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New Exercise'),
+        title: (widget.exercise == null)
+            ? const Text('New Exercise')
+            : const Text('Edit Exercise'),
       ),
       body: FutureBuilder(
         future: getTags(),

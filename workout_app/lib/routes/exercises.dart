@@ -8,10 +8,15 @@ import 'package:workout_app/Data/data.dart';
 import 'package:workout_app/Data/db_helper.dart';
 import 'package:workout_app/routes/edit_tags.dart';
 import 'package:workout_app/routes/new_exercise.dart';
+import 'package:workout_app/routes/new_workout_exercise.dart';
 import 'package:workout_app/routes/routines.dart';
 
 class Exercises extends StatefulWidget {
-  const Exercises({Key? key}) : super(key: key);
+  const Exercises({this.addToWorkout = false, this.workoutId = -1, Key? key})
+      : super(key: key);
+
+  final bool addToWorkout;
+  final int workoutId;
 
   @override
   _ExercisesState createState() => _ExercisesState();
@@ -140,6 +145,8 @@ class _ExercisesState extends State<Exercises> {
                         name: snapshot.data!.exercises[i].name,
                         reloadPage: reloadPage,
                         tags: snapshot.data!.exercises[i].tags,
+                        addToWorkout: widget.addToWorkout,
+                        workoutId: widget.workoutId,
                       );
                     }
                     // nothing
@@ -170,41 +177,43 @@ class _ExercisesState extends State<Exercises> {
           );
         },
       ),
-      bottomNavigationBar: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          Expanded(
-            child: TextButton(
-              child: const Icon(
-                Icons.format_list_bulleted_outlined,
-                size: 30,
-                color: Colors.white,
-              ),
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const Routines(),
+      bottomNavigationBar: (!widget.addToWorkout)
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Expanded(
+                  child: TextButton(
+                    child: const Icon(
+                      Icons.format_list_bulleted_outlined,
+                      size: 30,
+                      color: Colors.white,
+                    ),
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const Routines(),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
-          ),
-          Expanded(
-            child: TextButton(
-              child: const Icon(
-                Icons.fitness_center,
-                size: 30,
-                color: Colors.white,
-              ),
-              onPressed: () {},
-              style: TextButton.styleFrom(
-                backgroundColor: const Color(0xFF505050),
-              ),
-            ),
-          ),
-        ],
-      ),
+                ),
+                Expanded(
+                  child: TextButton(
+                    child: const Icon(
+                      Icons.fitness_center,
+                      size: 30,
+                      color: Colors.white,
+                    ),
+                    onPressed: () {},
+                    style: TextButton.styleFrom(
+                      backgroundColor: const Color(0xFF505050),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : const SizedBox(),
     );
   }
 }
@@ -215,6 +224,8 @@ class ExerciseTile extends StatelessWidget {
     required this.name,
     required this.reloadPage,
     required this.tags,
+    required this.addToWorkout,
+    required this.workoutId,
     Key? key,
   }) : super(key: key);
 
@@ -222,6 +233,8 @@ class ExerciseTile extends StatelessWidget {
   final String name;
   final Function reloadPage;
   final List<int> tags;
+  final bool addToWorkout;
+  final int workoutId;
 
   @override
   Widget build(BuildContext context) {
@@ -248,7 +261,22 @@ class ExerciseTile extends StatelessWidget {
           fit: StackFit.expand,
           children: <Widget>[
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                if (!addToWorkout) return;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => NewWorkoutExercise(
+                      workoutId: workoutId,
+                      exercise: ExerciseInfo(
+                        id: id,
+                        name: name,
+                        tags: tags,
+                      ),
+                    ),
+                  ),
+                );
+              },
               onLongPress: () async {
                 var reload = await Navigator.push(
                   context,

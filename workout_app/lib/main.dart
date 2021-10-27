@@ -1,6 +1,8 @@
 // ignore_for_file: unused_import
 
 import 'package:flutter/material.dart';
+import 'package:workout_app/Data/data.dart';
+import 'package:workout_app/routes/new_workout_exercise.dart';
 import 'package:workout_app/routes/routine.dart';
 import 'package:workout_app/routes/routines.dart';
 import 'package:workout_app/routes/workout.dart' as workout_page;
@@ -28,7 +30,8 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.dark,
-      home: const workout_page.Workout(workoutId: 0, name: 'Hypertrophy'),
+      // home: const workout_page.Workout(workoutId: 0, name: 'Hypertrophy'),6
+      home: const Routines(),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:workout_app/Data/data.dart';
 import 'package:workout_app/Data/db_helper.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:workout_app/routes/workout.dart' as workout_page;
 
 class Routine extends StatefulWidget {
   const Routine({
@@ -219,7 +220,6 @@ class Workout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.only(bottom: 20),
       margin: const EdgeInsets.symmetric(vertical: 10),
       decoration: const BoxDecoration(
         color: Color(0x20FFFFFF),
@@ -238,82 +238,97 @@ class Workout extends StatelessWidget {
             },
           )
         ],
-        child: Column(
-          children: [
-            // title row (title + edit button)
-            SizedBox(
-              height: 50,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Align(
-                    alignment: Alignment.center,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          name,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w600,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: Column(
+            children: [
+              // title row (title + edit button)
+              SizedBox(
+                height: 50,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Align(
+                      alignment: Alignment.center,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            name,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        const SizedBox(
-                          width: 70,
-                          height: 1,
-                          child: Divider(
-                            thickness: 1,
-                            color: Color(0xFF40C0DC),
+                          const SizedBox(
+                            width: 70,
+                            height: 1,
+                            child: Divider(
+                              thickness: 1,
+                              color: Color(0xFF40C0DC),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.edit),
-                      splashRadius: 24,
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: IconButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              settings:
+                                  const RouteSettings(name: '/workoutPage'),
+                              builder: (context) => workout_page.Workout(
+                                workoutId: id,
+                                name: name,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.edit),
+                        splashRadius: 24,
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                width: double.infinity,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    WorkoutExercise(
+                      name: 'BTW HSPU',
+                      sets: '4',
+                      reps: '4-6',
+                      notes: 'One foot off wall, minimal arch',
+                      rest: 90,
+                      superset: 1,
                     ),
-                  )
-                ],
+                    WorkoutExercise(
+                      name: 'Front Lever Ring Raise',
+                      sets: '4',
+                      reps: '3-5',
+                      notes: '',
+                      rest: 90,
+                      superset: 1,
+                    ),
+                    WorkoutExercise(
+                      name: 'Planche Lean',
+                      sets: '3',
+                      reps: '10s',
+                      notes: '',
+                      rest: 30,
+                      superset: 2,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              width: double.infinity,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  WorkoutExercise(
-                    name: 'BTW HSPU',
-                    sets: '4',
-                    reps: '4-6',
-                    notes: 'One foot off wall, minimal arch',
-                    rest: 90,
-                    superset: 1,
-                  ),
-                  WorkoutExercise(
-                    name: 'Front Lever Ring Raise',
-                    sets: '4',
-                    reps: '3-5',
-                    notes: '',
-                    rest: 90,
-                    superset: 1,
-                  ),
-                  WorkoutExercise(
-                    name: 'Planche Lean',
-                    sets: '3',
-                    reps: '10s',
-                    notes: '',
-                    rest: 30,
-                    superset: 2,
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

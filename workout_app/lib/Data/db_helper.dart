@@ -38,7 +38,7 @@ class DatabaseHelper {
       'CREATE TABLE exerciseTags(exerciseId INTEGER REFERENCES exercises(id), tagId INTEGER REFERENCES tags(id))',
     );
     db.execute(
-      'CREATE TABLE workoutExercises(id INTEGER PRIMARY KEY, workoutId INTEGER REFERENCES workouts(id), exerciseId INTEGER REFERENCES exercises(id), sets TEXT, reps TEXT, notes TEXT, exerciseOrder INTEGER, superset INTEGER)',
+      'CREATE TABLE workoutExercises(id INTEGER PRIMARY KEY, workoutId INTEGER REFERENCES workouts(id), exerciseId INTEGER REFERENCES exercises(id), sets TEXT, reps TEXT, notes TEXT, weight TEXT, exerciseOrder INTEGER, superset INTEGER)',
     );
   }
 
@@ -467,6 +467,83 @@ class DatabaseHelper {
   }
 
   //#endregion Workouts
+
+  //#region WorkoutExercises
+
+  Future<void> createWorkoutExercise(WorkoutExerciseInfo exercise) async {
+    final db = await database;
+    var result = await db.query(
+      'workoutExercises',
+      columns: ['exerciseOrder'],
+      where: 'workoutId = ?',
+      whereArgs: [exercise.workoutId],
+      limit: 1,
+      orderBy: 'exerciseOrder DESC',
+    );
+    int orderNumber = (result.isNotEmpty)
+        ? int.parse(result[0]['exerciseOrder'].toString()) + 1
+        : 0;
+    await db.insert(
+      'workoutExercises',
+      {
+        'workoutId': exercise.workoutId,
+        'exerciseId': exercise.exerciseId,
+        'sets': exercise.sets,
+        'reps': exercise.reps,
+        'notes': exercise.notes,
+        'weight': exercise.weight,
+        'superset': exercise.superset,
+        'exerciseOrder': orderNumber,
+      },
+    );
+  }
+
+  Future<List<WorkoutExerciseInfo>> getWorkoutExercises(int workoutId) async {
+    final db = await database;
+    List<Map<String, dynamic>> results = await db.query(
+      'workoutExercises',
+      columns: [
+        'id',
+        'exerciseId',
+        'sets',
+        'reps',
+        'notes',
+        'weight',
+        'superset',
+      ],
+      where: 'workoutId = ?',
+      whereArgs: [workoutId],
+      orderBy: 'exerciseOrder ASC',
+    );
+
+    List<WorkoutExerciseInfo> exercises = [];
+    for (var result in results) {
+      List<Map<String, dynamic>> nameResult = await db.query(
+        'exercises',
+        columns: ['name'],
+        where: 'id = ?',
+        whereArgs: [result['exerciseId']],
+      );
+      String exerciseName = nameResult[0]['name'];
+      exercises.add(
+        WorkoutExerciseInfo(
+          id: result['id'],
+          workoutId: workoutId,
+          exerciseId: result['exerciseId'],
+          exerciseName: exerciseName,
+          sets: result['sets'],
+          reps: result['reps'],
+          notes: result['notes'],
+          weight: result['weight'],
+          superset: result['superset'],
+        ),
+      );
+    }
+
+    return exercises;
+  }
+
+  //#endregion WorkoutExercises
 
   Future<void> deleteDb() async {
     await deleteDatabase(join(await getDatabasesPath(), _dbName));
