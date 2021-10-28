@@ -86,12 +86,30 @@ class _RoutineState extends State<Routine> {
     );
   }
 
+  Future<List<Map<WorkoutInfo, List<WorkoutExerciseInfo>>>>
+      getRoutineInfo() async {
+    List<Map<WorkoutInfo, List<WorkoutExerciseInfo>>> routineInfo = [];
+
+    List<WorkoutInfo> workouts =
+        await DatabaseHelper.inst.getWorkoutsForRoutine(widget.routineId);
+
+    for (WorkoutInfo workout in workouts) {
+      List<WorkoutExerciseInfo> workoutExercises =
+          await DatabaseHelper.inst.getWorkoutExercises(workout.id);
+
+      routineInfo.add({workout: workoutExercises});
+    }
+
+    return routineInfo;
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: DatabaseHelper.inst.getWorkoutsForRoutine(widget.routineId),
-      builder:
-          (BuildContext context, AsyncSnapshot<List<WorkoutInfo>> snapshot) {
+      future: getRoutineInfo(),
+      builder: (BuildContext context,
+          AsyncSnapshot<List<Map<WorkoutInfo, List<WorkoutExerciseInfo>>>>
+              snapshot) {
         if (snapshot.hasError) {
           // ignore: avoid_print
           print('Error getting workouts: $snapshot.error');
@@ -189,10 +207,12 @@ class _RoutineState extends State<Routine> {
                   ),
                 );
               }
+              WorkoutInfo workoutInfo = snapshot.data![i - 1].keys.single;
               return Workout(
-                key: Key(snapshot.data![i - 1].id.toString()),
-                id: snapshot.data![i - 1].id,
-                name: snapshot.data![i - 1].name,
+                key: Key(workoutInfo.id.toString()),
+                id: workoutInfo.id,
+                name: workoutInfo.name,
+                workoutExercises: snapshot.data![i - 1].values.single,
                 reloadPage: () {
                   setState(() {});
                 },
@@ -209,13 +229,32 @@ class Workout extends StatelessWidget {
   const Workout({
     required this.id,
     required this.name,
+    required this.workoutExercises,
     required this.reloadPage,
     Key? key,
   }) : super(key: key);
 
   final int id;
   final String name;
+  final List<WorkoutExerciseInfo> workoutExercises;
   final Function reloadPage;
+
+  List<WorkoutExercise> createWorkoutExercises() {
+    List<WorkoutExercise> exercises = [];
+    for (WorkoutExerciseInfo workoutExercise in workoutExercises) {
+      exercises.add(
+        WorkoutExercise(
+          name: workoutExercise.exerciseName!,
+          sets: workoutExercise.sets,
+          reps: workoutExercise.reps,
+          notes: workoutExercise.notes,
+          superset: workoutExercise.superset,
+        ),
+      );
+    }
+
+    return exercises;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -274,8 +313,8 @@ class Workout extends StatelessWidget {
                     Align(
                       alignment: Alignment.centerRight,
                       child: IconButton(
-                        onPressed: () {
-                          Navigator.push(
+                        onPressed: () async {
+                          await Navigator.push(
                             context,
                             MaterialPageRoute(
                               settings:
@@ -286,6 +325,7 @@ class Workout extends StatelessWidget {
                               ),
                             ),
                           );
+                          reloadPage();
                         },
                         icon: const Icon(Icons.edit),
                         splashRadius: 24,
@@ -299,32 +339,7 @@ class Workout extends StatelessWidget {
                 width: double.infinity,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    WorkoutExercise(
-                      name: 'BTW HSPU',
-                      sets: '4',
-                      reps: '4-6',
-                      notes: 'One foot off wall, minimal arch',
-                      rest: 90,
-                      superset: 1,
-                    ),
-                    WorkoutExercise(
-                      name: 'Front Lever Ring Raise',
-                      sets: '4',
-                      reps: '3-5',
-                      notes: '',
-                      rest: 90,
-                      superset: 1,
-                    ),
-                    WorkoutExercise(
-                      name: 'Planche Lean',
-                      sets: '3',
-                      reps: '10s',
-                      notes: '',
-                      rest: 30,
-                      superset: 2,
-                    ),
-                  ],
+                  children: createWorkoutExercises(),
                 ),
               ),
             ],
@@ -341,7 +356,6 @@ class WorkoutExercise extends StatelessWidget {
     required this.sets,
     required this.reps,
     required this.notes,
-    required this.rest,
     required this.superset,
     Key? key,
   }) : super(key: key);
@@ -350,14 +364,13 @@ class WorkoutExercise extends StatelessWidget {
   final String sets;
   final String reps;
   final String notes;
-  final int rest;
   final int superset;
 
   @override
   Widget build(BuildContext context) {
     String finalDescription = (notes != '')
-        ? '     $sets x $reps\n     $notes\n     Rest: ${rest}s'
-        : '     $sets x $reps\n     Rest: ${rest}s';
+        ? '     $sets x $reps\n     $notes'
+        : '     $sets x $reps';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

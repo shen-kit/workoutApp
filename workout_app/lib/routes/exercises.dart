@@ -268,6 +268,7 @@ class ExerciseTile extends StatelessWidget {
                   MaterialPageRoute(
                     builder: (context) => NewWorkoutExercise(
                       workoutId: workoutId,
+                      exerciseName: name,
                       exercise: ExerciseInfo(
                         id: id,
                         name: name,

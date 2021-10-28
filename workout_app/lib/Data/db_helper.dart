@@ -413,6 +413,16 @@ class DatabaseHelper {
     return workouts;
   }
 
+  Future<void> editWorkout(String name, int id) async {
+    final db = await database;
+    await db.update(
+      'workouts',
+      {'name': name},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   Future<void> reorderWorkouts(
       int routineId, int oldIndex, int newIndex) async {
     final db = await database;
@@ -500,6 +510,7 @@ class DatabaseHelper {
 
   Future<List<WorkoutExerciseInfo>> getWorkoutExercises(int workoutId) async {
     final db = await database;
+
     List<Map<String, dynamic>> results = await db.query(
       'workoutExercises',
       columns: [
@@ -541,6 +552,81 @@ class DatabaseHelper {
     }
 
     return exercises;
+  }
+
+  Future<void> updateWorkoutExercise(WorkoutExerciseInfo exercise) async {
+    final db = await database;
+    await db.update(
+      'workoutExercises',
+      {
+        'workoutId': exercise.workoutId,
+        'sets': exercise.sets,
+        'reps': exercise.reps,
+        'notes': exercise.notes,
+        'weight': exercise.weight,
+        'superset': exercise.superset,
+      },
+      where: 'id = ?',
+      whereArgs: [exercise.id],
+    );
+  }
+
+  Future<void> reorderWorkoutExercise(
+      int workoutId, int oldIndex, int newIndex) async {
+    final db = await database;
+
+    List<WorkoutExerciseInfo> oldWorkoutExerciseInfo =
+        await getWorkoutExercises(workoutId);
+    oldWorkoutExerciseInfo.insert(
+        newIndex, oldWorkoutExerciseInfo.removeAt(oldIndex));
+
+    await db.delete(
+      'workoutExercises',
+      where: 'workoutId = ?',
+      whereArgs: [workoutId],
+    );
+
+    List<WorkoutExerciseInfo> newWorkoutExerciseInfo = [];
+    for (var i = 0; i < oldWorkoutExerciseInfo.length; i++) {
+      final info = oldWorkoutExerciseInfo[i];
+      newWorkoutExerciseInfo.add(
+        WorkoutExerciseInfo(
+          workoutId: info.workoutId,
+          exerciseId: info.exerciseId,
+          sets: info.sets,
+          reps: info.reps,
+          notes: info.notes,
+          weight: info.weight,
+          superset: info.superset,
+          exerciseOrder: i,
+        ),
+      );
+    }
+
+    for (WorkoutExerciseInfo workoutExercise in newWorkoutExerciseInfo) {
+      await db.insert(
+        'workoutExercises',
+        {
+          'workoutId': workoutExercise.workoutId,
+          'exerciseId': workoutExercise.exerciseId,
+          'sets': workoutExercise.sets,
+          'reps': workoutExercise.reps,
+          'notes': workoutExercise.notes,
+          'weight': workoutExercise.weight,
+          'superset': workoutExercise.superset,
+          'exerciseOrder': workoutExercise.exerciseOrder,
+        },
+      );
+    }
+  }
+
+  Future<void> deleteWorkoutExercise(int id) async {
+    final db = await database;
+    await db.delete(
+      'workoutExercises',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   //#endregion WorkoutExercises

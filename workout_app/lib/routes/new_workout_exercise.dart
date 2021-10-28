@@ -3,11 +3,19 @@ import 'package:workout_app/Data/data.dart';
 import 'package:workout_app/Data/db_helper.dart';
 
 class NewWorkoutExercise extends StatefulWidget {
-  const NewWorkoutExercise(
-      {required this.workoutId, required this.exercise, Key? key})
-      : super(key: key);
-  final int workoutId;
-  final ExerciseInfo exercise;
+  const NewWorkoutExercise({
+    this.workoutId,
+    this.exercise,
+    this.workoutExercise,
+    required this.exerciseName,
+    Key? key,
+  }) : super(key: key);
+
+  final int? workoutId;
+  final ExerciseInfo? exercise;
+  final WorkoutExerciseInfo? workoutExercise;
+
+  final String exerciseName;
 
   @override
   _NewWorkoutExerciseState createState() => _NewWorkoutExerciseState();
@@ -23,6 +31,19 @@ class _NewWorkoutExerciseState extends State<NewWorkoutExercise> {
   final double textFieldWidth = 160;
 
   @override
+  void initState() {
+    // new exercise
+    if (widget.workoutExercise != null) {
+      setsController.text = widget.workoutExercise!.sets;
+      repsController.text = widget.workoutExercise!.reps;
+      weightController.text = widget.workoutExercise!.weight;
+      supersetController.text = widget.workoutExercise!.superset.toString();
+      notesController.text = widget.workoutExercise!.notes;
+    }
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -35,7 +56,7 @@ class _NewWorkoutExerciseState extends State<NewWorkoutExercise> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.exercise.name,
+              widget.exerciseName,
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
@@ -178,17 +199,44 @@ class _NewWorkoutExerciseState extends State<NewWorkoutExercise> {
                           ? repsController.text.replaceAll('..', 's')
                           : repsController.text;
 
-                      try {
-                        WorkoutExerciseInfo info = WorkoutExerciseInfo(
-                          workoutId: widget.workoutId,
-                          exerciseId: widget.exercise.id,
-                          sets: setsController.text,
-                          reps: reps,
-                          notes: notesController.text,
-                          weight: weight,
-                          superset: int.parse(supersetController.text),
+                      if (setsController.text == '' ||
+                          setsController.text == '' ||
+                          supersetController.text == '') {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'An Error Occurred: Please check all inputs are valid',
+                            ),
+                          ),
                         );
-                        await DatabaseHelper.inst.createWorkoutExercise(info);
+                        return;
+                      }
+
+                      try {
+                        if (widget.workoutExercise == null) {
+                          WorkoutExerciseInfo info = WorkoutExerciseInfo(
+                            workoutId: widget.workoutId!,
+                            exerciseId: widget.exercise!.id,
+                            sets: setsController.text,
+                            reps: reps,
+                            notes: notesController.text,
+                            weight: weight,
+                            superset: int.parse(supersetController.text),
+                          );
+                          await DatabaseHelper.inst.createWorkoutExercise(info);
+                        } else {
+                          WorkoutExerciseInfo info = WorkoutExerciseInfo(
+                            id: widget.workoutExercise!.id,
+                            workoutId: widget.workoutExercise!.workoutId,
+                            exerciseId: widget.workoutExercise!.exerciseId,
+                            sets: setsController.text,
+                            reps: reps,
+                            notes: notesController.text,
+                            weight: weight,
+                            superset: int.parse(supersetController.text),
+                          );
+                          await DatabaseHelper.inst.updateWorkoutExercise(info);
+                        }
                         Navigator.of(context).popUntil(
                           ModalRoute.withName('/workoutPage'),
                         );
