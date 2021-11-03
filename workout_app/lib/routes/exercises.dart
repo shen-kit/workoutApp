@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:confirm_dialog/confirm_dialog.dart';
 
 import 'package:workout_app/Data/data.dart';
 import 'package:workout_app/Data/db_helper.dart';
@@ -25,6 +24,10 @@ class Exercises extends StatefulWidget {
 class _ExercisesState extends State<Exercises> {
   bool filter = false;
   List<int> currentTagsFilter = [];
+  String currentSearchString = '';
+
+  Icon currentSearchIcon = const Icon(Icons.search);
+  Widget customSearchBar = const Text('Exercises');
 
   void toggleTagSelected(int id) {
     setState(() {
@@ -53,8 +56,49 @@ class _ExercisesState extends State<Exercises> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Exercises'),
+        title: customSearchBar,
         actions: [
+          IconButton(
+            icon: currentSearchIcon,
+            tooltip: 'Search',
+            onPressed: () {
+              setState(() {
+                if (currentSearchIcon.icon == Icons.search) {
+                  print('if true');
+                  currentSearchIcon = const Icon(Icons.cancel);
+                  customSearchBar = ListTile(
+                    leading: const Icon(
+                      Icons.search,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    title: TextField(
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        hintText: 'Exercise name...',
+                        hintStyle: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        border: InputBorder.none,
+                      ),
+                      style: const TextStyle(
+                        color: Colors.white,
+                      ),
+                      onChanged: (search) {
+                        setState(() => currentSearchString = search);
+                      },
+                    ),
+                  );
+                } else {
+                  print('else');
+                  currentSearchIcon = const Icon(Icons.search);
+                  customSearchBar = const Text('Exercises');
+                }
+              });
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'New exercise',
@@ -82,18 +126,6 @@ class _ExercisesState extends State<Exercises> {
               );
               setState(() {});
             },
-          ),
-          IconButton(
-            onPressed: () async {
-              if (await confirm(
-                context,
-                title: const Text('Delete the database?'),
-                content: const Text('Restart the app after to avoid errors'),
-              )) {
-                DatabaseHelper.inst.deleteDb();
-              }
-            },
-            icon: const Icon(Icons.delete),
           ),
         ],
       ),
@@ -138,6 +170,12 @@ class _ExercisesState extends State<Exercises> {
                           break;
                         }
                       }
+                    }
+                    if (currentSearchString.isNotEmpty &&
+                        !snapshot.data!.exercises[i].name
+                            .toLowerCase()
+                            .contains(currentSearchString)) {
+                      satisfiesFilter = false;
                     }
                     if (satisfiesFilter) {
                       return ExerciseTile(

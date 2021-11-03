@@ -2,10 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+
 import 'package:workout_app/Data/data.dart';
 import 'package:workout_app/Data/db_helper.dart';
 import 'package:workout_app/routes/exercises.dart';
 import 'package:workout_app/routes/routine.dart';
+import 'package:workout_app/routes/settings.dart';
 
 class Routines extends StatefulWidget {
   const Routines({Key? key}) : super(key: key);
@@ -147,6 +149,15 @@ class _RoutinesState extends State<Routines> {
                 icon: const Icon(Icons.add),
                 tooltip: 'New routine',
                 onPressed: () => showEditRoutineDialog(context),
+              ),
+              IconButton(
+                icon: const Icon(Icons.settings),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const Settings(),
+                  ),
+                ),
               ),
             ],
           ),

@@ -1,8 +1,12 @@
 // ignore_for_file: avoid_print
 
+import 'dart:io';
+
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:workout_app/Data/data.dart';
+import 'package:flutter/services.dart';
+import 'dart:typed_data';
 
 class DatabaseHelper {
   static const _dbName = 'workoutAppDb.db';
@@ -14,96 +18,28 @@ class DatabaseHelper {
   static Database? _database;
   Future<Database> get database async => _database ?? await _initDatabase();
 
-  //#region database defaults
-
-  List<String> createTableCommands = [
-    'CREATE TABLE routines(id INTEGER PRIMARY KEY, name TEXT, goals TEXT, routineOrder INTEGER)',
-    'CREATE TABLE workouts(id INTEGER PRIMARY KEY, routineId INTEGER REFERENCES routines(id), name TEXT, workoutOrder INTEGER)',
-    'CREATE TABLE tags(id INTEGER PRIMARY KEY, name TEXT, color INTEGER, tagOrder)',
-    'CREATE TABLE exercises(id INTEGER PRIMARY KEY, name TEXT)',
-    'CREATE TABLE exerciseTags(exerciseId INTEGER REFERENCES exercises(id), tagId INTEGER REFERENCES tags(id))',
-    'CREATE TABLE workoutExercises(id INTEGER PRIMARY KEY, workoutId INTEGER REFERENCES workouts(id), exerciseId INTEGER REFERENCES exercises(id), sets TEXT, reps TEXT, notes TEXT, weight TEXT, exerciseOrder INTEGER, superset INTEGER)',
-  ];
-
-  static List<TagInfo> defaultTags = [
-    TagInfo(order: 0, color: 0, name: 'Calisthenics'),
-    TagInfo(order: 1, color: 1, name: 'Weights'),
-    TagInfo(order: 2, color: 2, name: 'Push'),
-    TagInfo(order: 3, color: 3, name: 'Pull'),
-    TagInfo(order: 4, color: 4, name: 'Horizontal'),
-    TagInfo(order: 5, color: 5, name: 'Vertical'),
-  ];
-
-  static List<ExerciseInfo> defaultExercises = [
-    // horizontal pushing
-    ExerciseInfo(name: 'Push Up', tags: [1, 3, 5]),
-    ExerciseInfo(name: 'Wide Push Up', tags: [1, 3, 5]),
-    ExerciseInfo(name: 'Diamond Push Up', tags: [1, 3, 5]),
-    ExerciseInfo(name: 'Explosive Push Up', tags: [1, 3, 5]),
-    ExerciseInfo(name: 'Pseudo Planche Push Up', tags: [1, 3, 5]),
-    ExerciseInfo(name: 'Tuck Planche Push Up', tags: [1, 3, 5]),
-    ExerciseInfo(name: 'Archer Push Up', tags: [1, 3, 5]),
-    ExerciseInfo(name: 'Planche Lean', tags: [1, 3, 5]),
-    ExerciseInfo(name: 'Tuck Planche', tags: [1, 3, 5]),
-    // vertical pushing
-    ExerciseInfo(name: 'Pike Push Up', tags: [1, 3, 6]),
-    ExerciseInfo(name: 'BTW Handstand Push Up', tags: [1, 3, 6]),
-    ExerciseInfo(name: 'CTW Handstand Push Up', tags: [1, 3, 6]),
-    ExerciseInfo(name: 'Handstand Push Up Eccentric', tags: [1, 3, 6]),
-    ExerciseInfo(name: 'Handstand Push Up', tags: [1, 3, 6]),
-    // vertical pulling
-    ExerciseInfo(name: 'Pull Up', tags: [1, 4, 6]),
-    ExerciseInfo(name: 'Wide Pull Up', tags: [1, 4, 6]),
-    ExerciseInfo(name: 'Close Grip Pull Up', tags: [1, 4, 6]),
-    ExerciseInfo(name: 'L-Sit Pull Up', tags: [1, 4, 6]),
-    ExerciseInfo(name: 'Chin Up', tags: [1, 4, 6]),
-    ExerciseInfo(name: 'Close Grip Chin Up', tags: [1, 4, 6]),
-    ExerciseInfo(name: 'L-Sit Chin Up', tags: [1, 4, 6]),
-    // horizontal pulling
-    ExerciseInfo(name: 'Inverted Row', tags: [1, 4, 5]),
-    ExerciseInfo(name: 'Front Lever', tags: [1, 4, 5]),
-    ExerciseInfo(name: 'Straddle Front Lever', tags: [1, 4, 5]),
-    ExerciseInfo(name: 'Tuck Front Lever', tags: [1, 4, 5]),
-    ExerciseInfo(name: 'Advanced Tuck Front Lever', tags: [1, 4, 5]),
-    ExerciseInfo(name: 'Front Lever Ring Raise', tags: [1, 4, 5]),
-    ExerciseInfo(name: 'Tuck Front Lever Row', tags: [1, 4, 5]),
-    ExerciseInfo(name: 'Advanced Tuck Front Lever Row', tags: [1, 4, 5]),
-    ExerciseInfo(name: 'Front Lever Raise', tags: [1, 4, 5]),
-  ];
-
-  //#endregion database defaults
-
   // create the database
   Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), _dbName);
-    return await openDatabase(path, version: _dbVersion, onCreate: _onCreate);
-  }
+    var exists = await databaseExists(path);
 
-  // create the tables in the database
-  Future _onCreate(Database db, int version) async {
-    for (var i = 0; i < createTableCommands.length; i++) {
-      await db.execute(createTableCommands[i]);
+    // create copy from asset if database doesn't exist
+    if (!exists) {
+      // Make sure the parent directory exists
+      try {
+        await Directory(dirname(path)).create(recursive: true);
+      } catch (_) {}
+
+      // Copy from asset
+      ByteData data = await rootBundle.load(join("assets", "workoutAppDb.db"));
+      List<int> bytes =
+          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+
+      // Write and flush the bytes written
+      await File(path).writeAsBytes(bytes, flush: true);
     }
-    for (var i = 0; i < defaultTags.length; i++) {
-      var tag = defaultTags[i];
-      await db.insert(
-        'tags',
-        {'name': tag.name, 'color': tag.color, 'tagOrder': tag.order},
-      );
-    }
-    for (var i = 0; i < defaultExercises.length; i++) {
-      var exercise = defaultExercises[i];
-      int exerciseId = await db.insert(
-        'exercises',
-        {'name': exercise.name},
-      );
-      for (var i = 0; i < exercise.tags.length; i++) {
-        await db.insert(
-          'exerciseTags',
-          {'exerciseId': exerciseId, 'tagId': exercise.tags[i]},
-        );
-      }
-    }
+
+    return await openDatabase(path, version: _dbVersion);
   }
 
   //#region Tags
