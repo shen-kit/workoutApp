@@ -30,7 +30,6 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.dark,
-      // home: const workout_page.Workout(workoutId: 0, name: 'Hypertrophy'),6
       home: const Routines(),
     );
   }

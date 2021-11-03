@@ -29,7 +29,7 @@ class _RoutineState extends State<Routine> {
     goalsText = widget.goals.replaceAll(',', '\n');
   }
 
-  Future<void> showNewExerciseDialog(context) async {
+  Future<void> showNewWorkoutDialog(context) async {
     final nameController = TextEditingController();
     return showDialog<void>(
       context: context,
@@ -142,7 +142,7 @@ class _RoutineState extends State<Routine> {
                 icon: const Icon(Icons.add),
                 tooltip: 'New routine',
                 onPressed: () {
-                  showNewExerciseDialog(context);
+                  showNewWorkoutDialog(context);
                 },
               ),
             ],

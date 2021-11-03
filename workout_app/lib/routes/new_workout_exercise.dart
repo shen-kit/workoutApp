@@ -28,7 +28,7 @@ class _NewWorkoutExerciseState extends State<NewWorkoutExercise> {
   TextEditingController supersetController = TextEditingController();
   TextEditingController notesController = TextEditingController();
 
-  final double textFieldWidth = 160;
+  final double textFieldWidth = 140;
 
   @override
   void initState() {
@@ -154,7 +154,7 @@ class _NewWorkoutExerciseState extends State<NewWorkoutExercise> {
                 Container(
                   padding: EdgeInsets.zero,
                   height: 50,
-                  width: 160,
+                  width: textFieldWidth,
                   decoration: const BoxDecoration(
                     borderRadius: BorderRadius.all(
                       Radius.circular(10),
@@ -176,7 +176,7 @@ class _NewWorkoutExerciseState extends State<NewWorkoutExercise> {
                 Container(
                   padding: EdgeInsets.zero,
                   height: 50,
-                  width: 160,
+                  width: textFieldWidth,
                   decoration: const BoxDecoration(
                     borderRadius: BorderRadius.all(
                       Radius.circular(10),
